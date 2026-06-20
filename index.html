@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concierge Medicine Doctor Database — Research PoC</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
+
+  :root {
+    --navy: #0F1F3D;
+    --navy-mid: #1A3259;
+    --teal: #0E7C6E;
+    --teal-light: #14A896;
+    --teal-bg: #EAF7F5;
+    --slate: #374151;
+    --muted: #6B7280;
+    --light: #F3F6F9;
+    --border: #E2E8F0;
+    --white: #FFFFFF;
+    --verified: #059669;
+    --verified-bg: #ECFDF5;
+    --review: #D97706;
+    --review-bg: #FFFBEB;
+    --missing: #DC2626;
+    --missing-bg: #FEF2F2;
+    --pending: #6366F1;
+    --pending-bg: #EEF2FF;
+    --completed-bg: #ECFDF5;
+    --completed: #059669;
+    --inprogress-bg: #FFFBEB;
+    --inprogress: #D97706;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #F1F4F8;
+    color: var(--slate);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--navy);
+    color: rgba(255,255,255,0.7);
+    font-size: 12px;
+    text-align: center;
+    padding: 7px 16px;
+    letter-spacing: 0.03em;
+  }
+  .topbar strong { color: #fff; }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 60%, #1B4F72 100%);
+    color: #fff;
+    padding: 60px 20px 50px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: rgba(14,124,110,0.12);
+    pointer-events: none;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -120px; left: 10%;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(14,124,110,0.07);
+    pointer-events: none;
+  }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .header-badge {
+    display: inline-block;
+    background: rgba(14,124,110,0.25);
+    border: 1px solid rgba(14,168,150,0.4);
+    color: #5EEAD4;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 400;
+    line-height: 1.15;
+    margin-bottom: 14px;
+    letter-spacing: -0.5px;
+  }
+  header h1 em {
+    font-style: italic;
+    color: #5EEAD4;
+  }
+  header p.subtitle {
+    font-size: 16px;
+    color: rgba(255,255,255,0.75);
+    max-width: 600px;
+    margin-bottom: 12px;
+  }
+  header p.desc {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    max-width: 560px;
+    margin-bottom: 36px;
+  }
+
+  /* stat cards */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+  }
+  @media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(3,1fr); } }
+  @media (max-width: 560px) { .stat-grid { grid-template-columns: repeat(2,1fr); } }
+
+  .stat-card {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 18px 16px;
+    backdrop-filter: blur(4px);
+  }
+  .stat-card .num {
+    font-size: 26px;
+    font-weight: 700;
+    color: #5EEAD4;
+    letter-spacing: -0.5px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-card .label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 20px;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--navy);
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+  .section-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ── RESEARCH SCOPE ── */
+  .scope-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .scope-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    border-left: 3px solid var(--teal);
+  }
+  .scope-card h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .scope-card p { font-size: 12px; color: var(--muted); }
+  .sources-list {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+  }
+  .sources-list h4 { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 12px; }
+  .sources-list ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+    list-style: none;
+  }
+  .sources-list li {
+    font-size: 12px;
+    color: var(--slate);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .sources-list li::before {
+    content: '✓';
+    color: var(--teal);
+    font-weight: 700;
+    font-size: 11px;
+  }
+
+  /* ── DASHBOARD ── */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .dash-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 16px;
+    text-align: center;
+    position: relative;
+  }
+  .dash-card .dc-num {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .dash-card .dc-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+  .dash-card.accent .dc-num { color: var(--teal); }
+  .dash-card.warn .dc-num { color: var(--review); }
+  .dash-card.danger .dc-num { color: var(--missing); }
+
+  /* badges */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .badge-verified { background: var(--verified-bg); color: var(--verified); }
+  .badge-review   { background: var(--review-bg); color: var(--review); }
+  .badge-missing  { background: var(--missing-bg); color: var(--missing); }
+  .badge-pending  { background: var(--pending-bg); color: var(--pending); }
+  .badge-completed { background: var(--completed-bg); color: var(--completed); }
+  .badge-inprog   { background: var(--inprogress-bg); color: var(--inprogress); }
+  .badge-dupl     { background: #F3F4F6; color: #4B5563; }
+
+  .badges-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  /* ── STATE COVERAGE ── */
+  .state-progress-bar {
+    background: var(--border);
+    border-radius: 99px;
+    height: 8px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    max-width: 480px;
+  }
+  .state-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--teal), var(--teal-light));
+    width: 24%;
+    transition: width 1s ease;
+  }
+  .state-progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .state-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px,1fr));
+    gap: 10px;
+  }
+  .state-item {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .state-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--navy);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── FILTERS ── */
+  .filter-bar {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 12px;
+    align-items: end;
+  }
+  @media (max-width: 768px) { .filter-bar { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .filter-bar { grid-template-columns: 1fr; } }
+  .filter-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 5px;
+  }
+  .filter-group input,
+  .filter-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--slate);
+    background: var(--light);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .filter-group input:focus,
+  .filter-group select:focus { border-color: var(--teal-light); }
+  .filter-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    font-family: inherit;
+    letter-spacing: 0.02em;
+  }
+  .btn-primary { background: var(--teal); color: #fff; }
+  .btn-primary:hover { background: var(--teal-light); }
+  .btn-outline { background: var(--white); color: var(--slate); border: 1px solid var(--border); }
+  .btn-outline:hover { background: var(--light); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--light); }
+  .toggle-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--muted);
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .toggle-btn.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+  }
+  thead th {
+    background: var(--light);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--light); }
+  tbody td {
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--slate);
+    vertical-align: middle;
+  }
+  .td-practice { font-weight: 600; color: var(--navy); font-size: 12.5px; }
+  .td-doctor { font-size: 12px; }
+  .td-contact a { color: var(--teal); text-decoration: none; }
+  .td-contact a:hover { text-decoration: underline; }
+  .td-source a {
+    color: var(--teal);
+    font-size: 11px;
+    text-decoration: none;
+    word-break: break-all;
+  }
+  .td-source a:hover { text-decoration: underline; }
+  .missing-flag {
+    font-size: 10px;
+    color: var(--missing);
+    font-style: italic;
+  }
+  .table-footer {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* ── QUALITY CHECKS ── */
+  .qc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+  }
+  .qc-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .qc-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: var(--teal-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .qc-card h4 { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 3px; }
+  .qc-card p { font-size: 12px; color: var(--muted); }
+
+  /* ── WORKFLOW ── */
+  .workflow-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px;
+    position: relative;
+  }
+  .wf-step {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 18px;
+    position: relative;
+  }
+  .wf-step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--teal);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .wf-step h4 { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 5px; }
+  .wf-step p { font-size: 12px; color: var(--muted); }
+
+  /* ── EXPORT PREVIEW ── */
+  .export-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 640px) { .export-grid { grid-template-columns: 1fr; } }
+  .export-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .export-preview-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .export-preview-card h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .export-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--slate);
+  }
+  .export-row:last-child { border-bottom: none; }
+  .export-row::before {
+    content: '→';
+    color: var(--teal);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* ── PHASED DELIVERY ── */
+  .phase-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 640px) { .phase-grid { grid-template-columns: 1fr; } }
+  .phase-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .phase-card.highlight { border-color: var(--teal); }
+  .phase-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    background: var(--teal-bg);
+    color: var(--teal);
+  }
+  .phase-card h3 { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .phase-card p { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  .phase-card ul { list-style: none; }
+  .phase-card li {
+    font-size: 12px;
+    color: var(--slate);
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .phase-card li::before {
+    content: '✓';
+    color: var(--teal);
+    font-weight: 700;
+    font-size: 11px;
+  }
+
+  /* ── TIMELINE ── */
+  .timeline-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 640px) { .timeline-grid { grid-template-columns: 1fr; } }
+  .tl-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .tl-card h4 { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 12px; }
+  .tl-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .tl-row:last-child { border-bottom: none; }
+  .tl-row span:first-child { color: var(--muted); }
+  .tl-row span:last-child { font-weight: 600; color: var(--navy); }
+  .timeline-note {
+    background: var(--light);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--navy);
+    color: #fff;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 999;
+    max-width: 320px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--navy);
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    padding: 28px 20px;
+    font-size: 12px;
+    margin-top: 20px;
+  }
+  footer strong { color: rgba(255,255,255,0.8); }
+  footer p { margin-top: 6px; font-size: 11px; font-style: italic; max-width: 600px; margin-inline: auto; }
+
+  /* no-results */
+  .no-results {
+    padding: 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 36px 16px 32px; }
+    .section { padding: 32px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <strong>Prototype — Mock Data Only.</strong> This is a visual proof of concept. No real contact data is included.
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="header-badge">Proof of Concept · Research Preview</div>
+    <h1>Concierge Medicine<br><em>Doctor Database</em></h1>
+    <p class="subtitle">Verified research database of concierge medicine doctors and practices across all 50 US states.</p>
+    <p class="desc">A structured, source-verified database designed for lead generation, market research, outreach, and healthcare network analysis.</p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num">50</div><div class="label">States Covered</div></div>
+      <div class="stat-card"><div class="num">1,250+</div><div class="label">Est. Records</div></div>
+      <div class="stat-card"><div class="num">95%</div><div class="label">Source Verified</div></div>
+      <div class="stat-card"><div class="num">0</div><div class="label">Duplicate Target</div></div>
+      <div class="stat-card"><div class="num">XLS / CSV</div><div class="label">Export Ready</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- RESEARCH SCOPE -->
+<div class="section">
+  <h2 class="section-title">Research Scope</h2>
+  <p class="section-sub">Provider types and source directories included in the database build.</p>
+  <div class="scope-grid">
+    <div class="scope-card"><h4>Concierge Medicine Practices</h4><p>Membership-based care with direct physician access and annual or monthly retainer fees.</p></div>
+    <div class="scope-card"><h4>Membership-Based Primary Care</h4><p>DPC-adjacent models emphasizing unlimited access, preventive care, and reduced administrative overhead.</p></div>
+    <div class="scope-card"><h4>Direct Primary Care Providers</h4><p>Flat-fee subscription practices offering comprehensive primary care without insurance billing.</p></div>
+    <div class="scope-card"><h4>Independent Concierge Doctors</h4><p>Solo practitioners offering boutique, personalized care outside major concierge networks.</p></div>
+    <div class="scope-card"><h4>Network-Affiliated Practices</h4><p>Practices affiliated with national brands including MDVIP, SignatureMD, PartnerMD, and MD².</p></div>
+  </div>
+  <div class="sources-list">
+    <h4>Example Source Directories &amp; Networks</h4>
+    <ul>
+      <li>Concierge Choice Physicians</li>
+      <li>SignatureMD</li>
+      <li>MDVIP</li>
+      <li>MD²</li>
+      <li>PartnerMD</li>
+      <li>Independent practice websites</li>
+      <li>Google Maps / public search</li>
+      <li>Public healthcare directories</li>
+      <li>State medical board listings</li>
+    </ul>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- DASHBOARD SUMMARY -->
+<div class="section">
+  <h2 class="section-title">Dashboard Summary</h2>
+  <p class="section-sub">Mock research progress indicators — demonstrates the quality control view for the live database.</p>
+  <div class="dash-grid">
+    <div class="dash-card accent"><div class="dc-num">1,284</div><div class="dc-label">Total Records Found</div></div>
+    <div class="dash-card accent"><div class="dc-num">1,103</div><div class="dc-label">Verified Records</div></div>
+    <div class="dash-card warn"><div class="dc-num">211</div><div class="dc-label">Missing Email</div></div>
+    <div class="dash-card warn"><div class="dc-num">48</div><div class="dc-label">Missing Phone</div></div>
+    <div class="dash-card danger"><div class="dc-num">96</div><div class="dc-label">Duplicates Removed</div></div>
+    <div class="dash-card accent"><div class="dc-num">12/50</div><div class="dc-label">States Completed</div></div>
+    <div class="dash-card"><div class="dc-num">38/50</div><div class="dc-label">Pending Review</div></div>
+  </div>
+  <div style="margin-top:4px;">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Record Status Badges Used in the Database</p>
+    <div class="badges-row">
+      <span class="badge badge-verified">✓ Verified</span>
+      <span class="badge badge-review">⚠ Needs Review</span>
+      <span class="badge badge-missing">✕ Missing Email</span>
+      <span class="badge badge-missing">✕ Missing Phone</span>
+      <span class="badge badge-dupl">— Duplicate Removed</span>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- STATE COVERAGE -->
+<div class="section">
+  <h2 class="section-title">State Coverage</h2>
+  <p class="section-sub">Color-coded research status across all 50 US states.</p>
+  <p class="state-progress-label">Overall Completion — 12 of 50 states fully verified (24%)</p>
+  <div class="state-progress-bar"><div class="state-progress-fill" id="stateBar"></div></div>
+  <div class="state-grid" id="stateGrid"></div>
+</div>
+
+<hr class="divider">
+
+<!-- MAIN DATABASE TABLE -->
+<div class="section">
+  <h2 class="section-title">Database Records</h2>
+  <p class="section-sub">Interactive preview of mock doctor/practice records. Use filters below to explore the data structure.</p>
+
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label>Search</label>
+      <input type="text" id="filterSearch" placeholder="Practice name or doctor…">
+    </div>
+    <div class="filter-group">
+      <label>State</label>
+      <select id="filterState"><option value="">All States</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Network</label>
+      <select id="filterNetwork"><option value="">All Networks</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Status</label>
+      <select id="filterStatus">
+        <option value="">All Statuses</option>
+        <option value="Verified">Verified</option>
+        <option value="Needs Review">Needs Review</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="filter-actions">
+    <button class="toggle-btn" id="btnMissingEmail" onclick="toggleFilter('missingEmail')">Missing Email</button>
+    <button class="toggle-btn" id="btnMissingPhone" onclick="toggleFilter('missingPhone')">Missing Phone</button>
+    <button class="btn btn-ghost" onclick="resetFilters()">✕ Reset Filters</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Practice Name</th>
+          <th>Doctor Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Address</th>
+          <th>City</th>
+          <th>State</th>
+          <th>Network</th>
+          <th>Status</th>
+          <th>Missing Fields</th>
+          <th>Source URL</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div class="no-results" id="noResults">No records match the selected filters.</div>
+    <div class="table-footer">
+      <span id="tableCount">Showing all records</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" onclick="exportAlert('CSV')">Export CSV</button>
+        <button class="btn btn-outline" onclick="exportAlert('Excel')">Export Excel</button>
+        <button class="btn btn-ghost" onclick="exportAlert('Sample')">Download Sample</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- DATA QUALITY CONTROL -->
+<div class="section">
+  <h2 class="section-title">Data Quality Control</h2>
+  <p class="section-sub">Validation checks applied before the final export is delivered.</p>
+  <div class="qc-grid">
+    <div class="qc-card"><div class="qc-icon">🔍</div><div><h4>Duplicate Detection</h4><p>Cross-check by practice name, doctor name, phone, and address to eliminate redundant entries.</p></div></div>
+    <div class="qc-card"><div class="qc-icon">🔗</div><div><h4>Source URL Verification</h4><p>Every record includes a publicly accessible source URL confirming the practice's existence.</p></div></div>
+    <div class="qc-card"><div class="qc-icon">📋</div><div><h4>Contact Confirmation</h4><p>Email and phone cross-checked against the practice's own website wherever possible.</p></div></div>
+    <div class="qc-card"><div class="qc-icon">🏥</div><div><h4>Network Cross-Check</h4><p>Network affiliation verified against directory listings (MDVIP, SignatureMD, PartnerMD, etc.).</p></div></div>
+    <div class="qc-card"><div class="qc-icon">✅</div><div><h4>Concierge Model Confirmation</h4><p>Membership or concierge care model confirmed before inclusion — no general practices added.</p></div></div>
+    <div class="qc-card"><div class="qc-icon">⚑</div><div><h4>Missing Field Flagging</h4><p>Missing contact details are flagged clearly — never guessed or fabricated.</p></div></div>
+    <div class="qc-card"><div class="qc-icon">🗂️</div><div><h4>State &amp; City Normalization</h4><p>All state values standardized to two-letter abbreviations. Cities normalized for consistent sorting.</p></div></div>
+    <div class="qc-card"><div class="qc-icon">📊</div><div><h4>Sort &amp; Export Readiness</h4><p>Final file sorted by State → City, one row per doctor, export-ready in Excel and CSV format.</p></div></div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- SOURCE VERIFICATION WORKFLOW -->
+<div class="section">
+  <h2 class="section-title">Source Verification Workflow</h2>
+  <p class="section-sub">Five-step research process used to build and validate every record in the database.</p>
+  <div class="workflow-steps">
+    <div class="wf-step">
+      <div class="wf-step-num">1</div>
+      <h4>Directory Discovery</h4>
+      <p>Find doctors from concierge medicine networks and public directories including MDVIP, SignatureMD, and PartnerMD.</p>
+    </div>
+    <div class="wf-step">
+      <div class="wf-step-num">2</div>
+      <h4>Independent Practice Search</h4>
+      <p>Research independent concierge and membership-based practices state by state and city by city.</p>
+    </div>
+    <div class="wf-step">
+      <div class="wf-step-num">3</div>
+      <h4>Practice Website Validation</h4>
+      <p>Confirm that each practice offers concierge, membership-based, or direct primary care-style services.</p>
+    </div>
+    <div class="wf-step">
+      <div class="wf-step-num">4</div>
+      <h4>Contact Data Extraction</h4>
+      <p>Collect email, phone, address, city, state, and source URL from publicly available pages only.</p>
+    </div>
+    <div class="wf-step">
+      <div class="wf-step-num">5</div>
+      <h4>Cleaning &amp; Export</h4>
+      <p>Remove duplicates, flag missing fields, sort by state and city, and export to Excel or CSV.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- EXPORT PREVIEW -->
+<div class="section">
+  <h2 class="section-title">Export Preview</h2>
+  <p class="section-sub">Format and structure of the final deliverable file.</p>
+  <div class="export-grid">
+    <div>
+      <div class="export-buttons">
+        <button class="btn btn-primary" onclick="exportAlert('CSV')">⬇ Export CSV</button>
+        <button class="btn btn-outline" onclick="exportAlert('Excel')">⬇ Export Excel</button>
+        <button class="btn btn-ghost" onclick="exportAlert('Sample')">⬇ Download Sample</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);">Export buttons connect to the real dataset in the final delivered version.</p>
+    </div>
+    <div class="export-preview-card">
+      <h4>📄 Final Deliverable Format</h4>
+      <div class="export-row">Single Excel / CSV file</div>
+      <div class="export-row">One row per doctor / practice</div>
+      <div class="export-row">Sorted by State, then City</div>
+      <div class="export-row">Source URL on every row</div>
+      <div class="export-row">Missing fields flagged, not blank</div>
+      <div class="export-row">Duplicates fully removed</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- PHASED DELIVERY -->
+<div class="section">
+  <h2 class="section-title">Recommended Phased Delivery</h2>
+  <p class="section-sub">A two-phase approach ensures quality before scaling to all 50 states.</p>
+  <div class="phase-grid">
+    <div class="phase-card highlight">
+      <div class="phase-tag">Phase 1</div>
+      <h3>Sample State Pilot</h3>
+      <p>Research and verify one selected state first to confirm data quality, format, and sourcing method before scaling.</p>
+      <ul>
+        <li>One target state</li>
+        <li>Verified doctor/practice records</li>
+        <li>Source URLs included</li>
+        <li>Missing field flags applied</li>
+        <li>Duplicate check completed</li>
+        <li>Excel/CSV sample delivered</li>
+      </ul>
+    </div>
+    <div class="phase-card">
+      <div class="phase-tag">Phase 2</div>
+      <h3>Full 50-State Database</h3>
+      <p>After approval of the sample, expand the same verified research process across all 50 US states.</p>
+      <ul>
+        <li>All 50 states</li>
+        <li>Network and independent practices</li>
+        <li>Manual + automated research support</li>
+        <li>Quality control review</li>
+        <li>Final cleaned Excel/CSV file</li>
+        <li>Ongoing update option available</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- TIMELINE & PRICING -->
+<div class="section">
+  <h2 class="section-title">Mock Timeline &amp; Pricing</h2>
+  <p class="section-sub">Indicative estimates — actual figures confirmed after scope review.</p>
+  <div class="timeline-grid">
+    <div class="tl-card">
+      <h4>📍 Phase 1 — Sample State</h4>
+      <div class="tl-row"><span>Timeline</span><span>2–4 Business Days</span></div>
+      <div class="tl-row"><span>Estimated Cost</span><span>To Be Confirmed</span></div>
+      <div class="tl-row"><span>Deliverable</span><span>Excel / CSV Sample File</span></div>
+      <div class="tl-row"><span>Approval Step</span><span>Client Review Before Scale</span></div>
+    </div>
+    <div class="tl-card">
+      <h4>🗺️ Phase 2 — All 50 States</h4>
+      <div class="tl-row"><span>Timeline</span><span>4–8 Weeks</span></div>
+      <div class="tl-row"><span>Estimated Cost</span><span>After Sample Review</span></div>
+      <div class="tl-row"><span>Deliverable</span><span>Full Cleaned Excel / CSV</span></div>
+      <div class="tl-row"><span>Quality Control</span><span>Included</span></div>
+    </div>
+  </div>
+  <div class="timeline-note">
+    Actual pricing and timeline may vary depending on target record count, depth of verification, and availability of public contact data.
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <strong>Concierge Medicine Database — Proof of Concept</strong>
+  <p>This prototype uses mock data only. Real contact data must be collected from public sources, verified manually where required, and exported only after quality review. No real doctor contact information has been included.</p>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── MOCK DATA ── */
+const records = [
+  { practice:"Pacific Premier Concierge Medicine", doctor:"Dr. Emily Carter", email:"contact@pacificpremiermd.com", phone:"(310) 555-0184", address:"1200 Wilshire Blvd, Suite 410", city:"Los Angeles", state:"CA", network:"Independent", status:"Verified", missing:"None", url:"https://example.com/pacific-premier-concierge" },
+  { practice:"Westside Elite Health", doctor:"Dr. Jason Liu", email:"info@westsideelitehealth.com", phone:"(424) 555-0291", address:"9301 Wilshire Blvd, Suite 200", city:"Beverly Hills", state:"CA", network:"SignatureMD", status:"Verified", missing:"None", url:"https://example.com/westside-elite" },
+  { practice:"Palm Beach Executive Health", doctor:"Dr. Michael Rosen", email:"info@palmbeachexecutivehealth.com", phone:"(561) 555-0142", address:"455 Royal Palm Way", city:"Palm Beach", state:"FL", network:"MDVIP", status:"Verified", missing:"None", url:"https://example.com/palm-beach-executive" },
+  { practice:"South Florida Concierge Care", doctor:"Dr. Angela Montoya", email:"Not publicly available", phone:"(305) 555-0377", address:"820 S Douglas Rd", city:"Coral Gables", state:"FL", network:"PartnerMD", status:"Needs Review", missing:"Email", url:"https://example.com/south-florida-concierge" },
+  { practice:"Manhattan Private Medical", doctor:"Dr. Sarah Klein", email:"Not publicly available", phone:"(212) 555-0198", address:"75 Madison Avenue, Suite 900", city:"New York", state:"NY", network:"SignatureMD", status:"Needs Review", missing:"Email", url:"https://example.com/manhattan-private-medical" },
+  { practice:"Upper East Side Concierge MD", doctor:"Dr. Robert Ashford", email:"contact@uesconciergemd.com", phone:"Not publicly available", address:"1185 Park Avenue", city:"New York", state:"NY", network:"Independent", status:"Needs Review", missing:"Phone", url:"https://example.com/ues-concierge-md" },
+  { practice:"Austin Membership Medicine", doctor:"Dr. Daniel Harris", email:"hello@austinmembershipmedicine.com", phone:"Not publicly available", address:"220 Congress Avenue", city:"Austin", state:"TX", network:"Independent", status:"Needs Review", missing:"Phone", url:"https://example.com/austin-membership-medicine" },
+  { practice:"Houston Premier Care", doctor:"Dr. Linda Patel", email:"lpatel@houstonpremiercare.com", phone:"(713) 555-0265", address:"3900 Essex Lane, Suite 100", city:"Houston", state:"TX", network:"MDVIP", status:"Verified", missing:"None", url:"https://example.com/houston-premier-care" },
+  { practice:"Windy City Concierge Health", doctor:"Dr. Marcus Webb", email:"info@windycityconcierge.com", phone:"(312) 555-0149", address:"875 N Michigan Ave, Suite 1800", city:"Chicago", state:"IL", network:"MD²", status:"Verified", missing:"None", url:"https://example.com/windy-city-concierge" },
+  { practice:"Lincoln Park Direct Care", doctor:"Dr. Priya Sharma", email:"Not publicly available", phone:"(773) 555-0314", address:"2246 N Lincoln Ave", city:"Chicago", state:"IL", network:"Independent", status:"Needs Review", missing:"Email", url:"https://example.com/lincoln-park-direct" },
+  { practice:"Seattle Health Concierge", doctor:"Dr. Nathan Brooks", email:"nbrooks@seattleconciergemd.com", phone:"(206) 555-0088", address:"1325 4th Ave, Suite 1700", city:"Seattle", state:"WA", network:"PartnerMD", status:"Verified", missing:"None", url:"https://example.com/seattle-health-concierge" },
+  { practice:"Bellevue Membership Medicine", doctor:"Dr. Christine Yong", email:"cyong@bellevuemembermd.com", phone:"(425) 555-0202", address:"10500 NE 8th St, Suite 800", city:"Bellevue", state:"WA", network:"Independent", status:"Verified", missing:"None", url:"https://example.com/bellevue-membership" },
+  { practice:"Atlanta Executive Medicine", doctor:"Dr. James O'Connor", email:"Not publicly available", phone:"Not publicly available", address:"3500 Peachtree Rd NE, Suite G", city:"Atlanta", state:"GA", network:"MDVIP", status:"Needs Review", missing:"Email, Phone", url:"https://example.com/atlanta-executive-medicine" },
+  { practice:"Buckhead Concierge Care", doctor:"Dr. Maria Gonzalez", email:"info@buckheadconcierge.com", phone:"(404) 555-0321", address:"3060 Peachtree Rd NW", city:"Atlanta", state:"GA", network:"SignatureMD", status:"Verified", missing:"None", url:"https://example.com/buckhead-concierge" },
+  { practice:"Boston Beacon Hill Medicine", doctor:"Dr. Thomas Whitfield", email:"twhitfield@beaconhillmd.com", phone:"(617) 555-0166", address:"100 Cambridge St, Suite 12", city:"Boston", state:"MA", network:"Independent", status:"Verified", missing:"None", url:"https://example.com/beacon-hill-medicine" },
+  { practice:"Back Bay Health Partners", doctor:"Dr. Kimberly Frost", email:"Not publicly available", phone:"(617) 555-0233", address:"800 Boylston St, Suite 400", city:"Boston", state:"MA", network:"PartnerMD", status:"Needs Review", missing:"Email", url:"https://example.com/back-bay-health" },
+  { practice:"Phoenix Desert Concierge MD", doctor:"Dr. Aaron Stiles", email:"aaron@desertconciergemd.com", phone:"(602) 555-0192", address:"2501 E Camelback Rd, Suite 220", city:"Phoenix", state:"AZ", network:"MDVIP", status:"Verified", missing:"None", url:"https://example.com/phoenix-desert-concierge" },
+  { practice:"Scottsdale Private Practice", doctor:"Dr. Heather McKinley", email:"hmckinley@scottsdaleprivatemd.com", phone:"(480) 555-0277", address:"8900 E Pinnacle Peak Rd", city:"Scottsdale", state:"AZ", network:"Independent", status:"Verified", missing:"None", url:"https://example.com/scottsdale-private-md" },
+  { practice:"Denver Alpine Concierge Care", doctor:"Dr. Ryan Torres", email:"Not publicly available", phone:"(720) 555-0343", address:"1600 Glenarm Place, Suite 100", city:"Denver", state:"CO", network:"SignatureMD", status:"Needs Review", missing:"Email", url:"https://example.com/denver-alpine-concierge" },
+  { practice:"Cherry Creek Membership Health", doctor:"Dr. Susan Nakamura", email:"info@cherrycreekhealth.com", phone:"(303) 555-0412", address:"3033 E 1st Ave, Suite 300", city:"Denver", state:"CO", network:"MD²", status:"Verified", missing:"None", url:"https://example.com/cherry-creek-health" },
+  { practice:"Nashville Elite Primary Care", doctor:"Dr. Gregory Hunt", email:"ghunt@nashvilleelitemd.com", phone:"(615) 555-0387", address:"2000 Richard Jones Rd", city:"Nashville", state:"TN", network:"Independent", status:"Verified", missing:"None", url:"https://example.com/nashville-elite-care" },
+  { practice:"Charlotte Concierge Medicine", doctor:"Dr. Patricia Lane", email:"Not publicly available", phone:"Not publicly available", address:"6135 Park South Dr, Suite 510", city:"Charlotte", state:"NC", network:"MDVIP", status:"Needs Review", missing:"Email, Phone", url:"https://example.com/charlotte-concierge" },
+  { practice:"Portland Direct Primary Care", doctor:"Dr. Oliver Marsh", email:"oliver@portlanddirectcare.com", phone:"(503) 555-0118", address:"1 SW Columbia St, Suite 1000", city:"Portland", state:"OR", network:"Independent", status:"Verified", missing:"None", url:"https://example.com/portland-direct-care" },
+];
+
+/* ── STATE DATA ── */
+const stateData = [
+  {name:"Alabama",s:"AL",status:"Pending"},{name:"Alaska",s:"AK",status:"Pending"},{name:"Arizona",s:"AZ",status:"Completed"},{name:"Arkansas",s:"AR",status:"Pending"},{name:"California",s:"CA",status:"Completed"},
+  {name:"Colorado",s:"CO",status:"Completed"},{name:"Connecticut",s:"CT",status:"In Progress"},{name:"Delaware",s:"DE",status:"Pending"},{name:"Florida",s:"FL",status:"Completed"},{name:"Georgia",s:"GA",status:"Completed"},
+  {name:"Hawaii",s:"HI",status:"Pending"},{name:"Idaho",s:"ID",status:"Pending"},{name:"Illinois",s:"IL",status:"Completed"},{name:"Indiana",s:"IN",status:"In Progress"},{name:"Iowa",s:"IA",status:"Pending"},
+  {name:"Kansas",s:"KS",status:"Pending"},{name:"Kentucky",s:"KY",status:"Needs Review"},{name:"Louisiana",s:"LA",status:"Pending"},{name:"Maine",s:"ME",status:"Pending"},{name:"Maryland",s:"MD",status:"In Progress"},
+  {name:"Massachusetts",s:"MA",status:"Completed"},{name:"Michigan",s:"MI",status:"In Progress"},{name:"Minnesota",s:"MN",status:"Needs Review"},{name:"Mississippi",s:"MS",status:"Pending"},{name:"Missouri",s:"MO",status:"Pending"},
+  {name:"Montana",s:"MT",status:"Pending"},{name:"Nebraska",s:"NE",status:"Pending"},{name:"Nevada",s:"NV",status:"In Progress"},{name:"New Hampshire",s:"NH",status:"Pending"},{name:"New Jersey",s:"NJ",status:"In Progress"},
+  {name:"New Mexico",s:"NM",status:"Pending"},{name:"New York",s:"NY",status:"Completed"},{name:"North Carolina",s:"NC",status:"Completed"},{name:"North Dakota",s:"ND",status:"Pending"},{name:"Ohio",s:"OH",status:"Needs Review"},
+  {name:"Oklahoma",s:"OK",status:"Pending"},{name:"Oregon",s:"OR",status:"Completed"},{name:"Pennsylvania",s:"PA",status:"In Progress"},{name:"Rhode Island",s:"RI",status:"Pending"},{name:"South Carolina",s:"SC",status:"Pending"},
+  {name:"South Dakota",s:"SD",status:"Pending"},{name:"Tennessee",s:"TN",status:"Completed"},{name:"Texas",s:"TX",status:"Completed"},{name:"Utah",s:"UT",status:"Needs Review"},{name:"Vermont",s:"VT",status:"Pending"},
+  {name:"Virginia",s:"VA",status:"In Progress"},{name:"Washington",s:"WA",status:"Completed"},{name:"West Virginia",s:"WV",status:"Pending"},{name:"Wisconsin",s:"WI",status:"Pending"},{name:"Wyoming",s:"WY",status:"Pending"}
+];
+
+/* ── ACTIVE FILTERS ── */
+let activeFilters = { missingEmail: false, missingPhone: false };
+
+function toggleFilter(key) {
+  activeFilters[key] = !activeFilters[key];
+  document.getElementById('btn' + key.charAt(0).toUpperCase() + key.slice(1)).classList.toggle('active', activeFilters[key]);
+  renderTable();
+}
+
+function resetFilters() {
+  document.getElementById('filterSearch').value = '';
+  document.getElementById('filterState').value = '';
+  document.getElementById('filterNetwork').value = '';
+  document.getElementById('filterStatus').value = '';
+  activeFilters.missingEmail = false;
+  activeFilters.missingPhone = false;
+  document.getElementById('btnMissingEmail').classList.remove('active');
+  document.getElementById('btnMissingPhone').classList.remove('active');
+  renderTable();
+}
+
+/* ── RENDER TABLE ── */
+function renderTable() {
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+  const state  = document.getElementById('filterState').value;
+  const net    = document.getElementById('filterNetwork').value;
+  const status = document.getElementById('filterStatus').value;
+
+  const filtered = records.filter(r => {
+    if (search && !r.practice.toLowerCase().includes(search) && !r.doctor.toLowerCase().includes(search)) return false;
+    if (state  && r.state   !== state)  return false;
+    if (net    && r.network !== net)    return false;
+    if (status && r.status  !== status) return false;
+    if (activeFilters.missingEmail && r.email !== 'Not publicly available')  return false;
+    if (activeFilters.missingPhone && r.phone !== 'Not publicly available') return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('tableBody');
+  const noRes = document.getElementById('noResults');
+  tbody.innerHTML = '';
+
+  if (filtered.length === 0) {
+    noRes.style.display = 'block';
+    document.getElementById('tableCount').textContent = '0 records';
+    return;
+  }
+  noRes.style.display = 'none';
+  document.getElementById('tableCount').textContent = `Showing ${filtered.length} of ${records.length} records`;
+
+  filtered.forEach((r, i) => {
+    const badgeClass = r.status === 'Verified' ? 'badge-verified' : 'badge-review';
+    const missingClass = r.missing !== 'None' ? 'badge-missing' : 'badge-verified';
+    const missingLabel = r.missing !== 'None' ? r.missing : 'None';
+    const emailDisplay = r.email === 'Not publicly available'
+      ? `<span class="missing-flag">Not available</span>`
+      : `<a href="mailto:${r.email}" class="td-contact">${r.email}</a>`;
+    const phoneDisplay = r.phone === 'Not publicly available'
+      ? `<span class="missing-flag">Not available</span>`
+      : `<span>${r.phone}</span>`;
+
+    tbody.innerHTML += `
+      <tr>
+        <td style="color:var(--muted)">${i+1}</td>
+        <td class="td-practice">${r.practice}</td>
+        <td class="td-doctor">${r.doctor}</td>
+        <td class="td-contact">${emailDisplay}</td>
+        <td>${phoneDisplay}</td>
+        <td style="font-size:11px;max-width:160px;">${r.address}</td>
+        <td>${r.city}</td>
+        <td><strong>${r.state}</strong></td>
+        <td><span style="font-size:11px">${r.network}</span></td>
+        <td><span class="badge ${badgeClass}">${r.status}</span></td>
+        <td><span class="badge ${missingClass}" style="font-size:9px">${missingLabel}</span></td>
+        <td class="td-source"><a href="${r.url}" target="_blank" title="${r.url}">View Source ↗</a></td>
+      </tr>`;
+  });
+}
+
+/* ── POPULATE FILTER DROPDOWNS ── */
+function populateFilters() {
+  const states   = [...new Set(records.map(r => r.state))].sort();
+  const networks = [...new Set(records.map(r => r.network))].sort();
+  const stateEl  = document.getElementById('filterState');
+  const netEl    = document.getElementById('filterNetwork');
+  states.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; stateEl.appendChild(o); });
+  networks.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; netEl.appendChild(o); });
+  ['filterSearch','filterState','filterNetwork','filterStatus'].forEach(id => {
+    document.getElementById(id).addEventListener('input', renderTable);
+    document.getElementById(id).addEventListener('change', renderTable);
+  });
+}
+
+/* ── STATE GRID ── */
+function renderStates() {
+  const grid = document.getElementById('stateGrid');
+  grid.innerHTML = '';
+  stateData.forEach(st => {
+    let bc = '', bl = '';
+    if      (st.status === 'Completed')  { bc = 'badge-completed'; bl = 'Completed'; }
+    else if (st.status === 'In Progress'){ bc = 'badge-inprog';    bl = 'In Progress'; }
+    else if (st.status === 'Needs Review'){ bc = 'badge-review';   bl = 'Needs Review'; }
+    else                                  { bc = 'badge-pending';  bl = 'Pending'; }
+    grid.innerHTML += `<div class="state-item"><span class="state-name">${st.name}</span><span class="badge ${bc}">${bl}</span></div>`;
+  });
+}
+
+/* ── EXPORT TOAST ── */
+function exportAlert(type) {
+  showToast(`Prototype only: ${type} export will be connected in the final version.`);
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  populateFilters();
+  renderTable();
+  renderStates();
+  setTimeout(() => { document.getElementById('stateBar').style.width = '24%'; }, 300);
+});
+</script>
+</body>
+</html>
